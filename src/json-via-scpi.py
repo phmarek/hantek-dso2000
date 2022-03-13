@@ -103,6 +103,8 @@ def readWaveform(o):
                 }
         if res['enable']:
             res['samples'] = channelSamples(chan, samples_data, int(points/2))
+            res['voltage'] = absoluteVoltages(res)
+
         return res
 
     def channelSamples(chan, data, block_len):
@@ -115,10 +117,23 @@ def readWaveform(o):
         pos2 = pos1 + channel_count*block_len
         print("%s %s %s %s %s %s" % (chan, pos2, pos1, channel_count, points, block_len))
 
-        samples = list(struct.unpack('%dB' % block_len, data[pos1:pos1+block_len]))
-        samples.extend(struct.unpack('%dB' % block_len, data[pos2:pos2+block_len]))
+        samples = list(struct.unpack('%db' % block_len, data[pos1:pos1+block_len]))
+        samples.extend(struct.unpack('%db' % block_len, data[pos2:pos2+block_len]))
         return samples
             
+    def absoluteVoltages(channel):
+        nonlocal o
+        off   = float(o.query(':CHANnel%d:OFFSet?' % channel['channel']))
+        probe = float(o.query(':CHANnel%d:PROBe?' % channel['channel'])) # already factored in scale
+        scale = float(o.query(':CHANnel%d:SCALe?' % channel['channel']))
+
+        # TODO: Inverted, unsigned, ...
+        grid_y = 25 # ??
+
+        channel['offset'] = off
+        channel['probe']  = probe
+        channel['scale']  = scale
+        return [ v/grid_y*scale-off for v in channel['samples']]
 
     while not readPacket():
         #print("now %d bytes of %d\n" % (len(data), total))
@@ -202,7 +217,7 @@ while True:
     gp.writelines(["plot '-', '-'\n"])
     for ch in wave["channels"]:
         if ch['enable']:
-            gp.writelines([str(sample)+"\n" for sample in ch["samples"]])
+            gp.writelines([str(sample)+"\n" for sample in ch["voltage"]])
             gp.writelines(["e\n"])
 
     gp.flush()
