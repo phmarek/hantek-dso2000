@@ -2,6 +2,13 @@
 
 Here is an accumulation of scripts that allow to get data from a Hantek DSO 2D15 (and others of this series, I hope); pushing data (ie. configuration and wave generator waveforms) is also on-topic.
 
+## Current status
+
+CH1 and/or CH2 get fetched, and written in the CSV.
+
+Pure sample bytes: ![Figure 1](doc/input-bytes.png)
+
+Actual voltages: ![Figure 2](doc/voltages.png)
 
 
 vim: set ft=markdown :
