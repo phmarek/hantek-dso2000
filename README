@@ -1,0 +1,7 @@
+# Data exchange with Hantek DSO 2000 series
+
+Here is an accumulation of scripts that allow to get data from a Hantek DSO 2D15 (and others of this series, I hope); pushing data (ie. configuration and wave generator waveforms) is also on-topic.
+
+
+
+vim: set ft=markdown :

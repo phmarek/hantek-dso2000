@@ -65,7 +65,7 @@ def readWaveform(o):
 
         cur_len = int(inp[2:11].decode())
         if cur_len == 0:
-            return True
+            return False
 
         total_smpls = int(inp[11:20].decode())
         cur_pos = int(inp[20:29].decode())
