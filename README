@@ -6,6 +6,49 @@ Here is an accumulation of scripts that allow to get data from a Hantek DSO 2D15
 
 CH1 and/or CH2 data get fetched, and written in the JSON along with a bit of metadata (like sampling rate).
 
+### JSON example
+
+```json
+{                                                                                                                                                                                             
+  "trigger": false,                                                                                                                                                                           
+  "running": false,                                                                                                                                                                           
+  "channels": [                                                                                                                                                                               
+    {
+      "channel": 1,                                                                                             
+      "enable": true,
++---4002 lines: "voltage":·····································································································································································
++---4002 lines: "samples":·····································································································································································
+      "offset": 4,                                                                                                   
+      "probe": 10,                                                                                                   
+      "scale": 2                                                                                                     
+    },                                                                                                               
+    {                                                                                                                  
+      "channel": 2,
+      "enable": true,
++---4002 lines: "voltage":·····································································································································································
++---4002 lines: "samples":·····································································································································································
+      "offset": -3,                                                                                                 
+      "probe": 10,                                                                                                  
+      "scale": 1                                                                                                    
+    },                                                                                                               
+    {                                                                                                                  
+      "channel": 3,
+      "enable": false,
+      "voltage": 1                                                                                                   
+    },                                                                                                               
+    {                                                                                                                
+      "channel": 4,                                                                                                  
+      "enable": false,                                                                                               
+      "voltage": 1                                                                                                   
+    }                                                                                                                   
+  ],                                                                                                                    
+  "sampling_rate": 25000,                                                                                               
+  "sampling_multiple": 1,                                                                                               
+  "trigger_time": 0,                                                                                                    
+  "acq_start?": 10                                                                                                      
+}
+```
+
 ### Pure sample bytes
 
 ![Figure 1](doc/input-bytes.png)
