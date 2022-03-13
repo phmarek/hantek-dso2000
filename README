@@ -4,7 +4,7 @@ Here is an accumulation of scripts that allow to get data from a Hantek DSO 2D15
 
 ## Current status
 
-CH1 and/or CH2 get fetched, and written in the CSV.
+CH1 and/or CH2 data get fetched, and written in the JSON along with a bit of metadata (like sampling rate).
 
 ### Pure sample bytes
 
