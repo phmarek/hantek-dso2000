@@ -10,6 +10,16 @@ import json;
 
 debug_flag = 0
 
+def debug(*args):
+    global debug_flag
+    if debug_flag:
+        # TODO: timestamp?
+        if type(args) == type('str'):
+            sys.stderr.write(args)
+        else:
+            sys.stderr.write(str(args))
+        sys.stderr.write("\n")
+
 def channelMetaData(o, chan):
     coup = False
     try:
@@ -72,8 +82,8 @@ def readWaveform(o):
         total_smpls = int(inp[11:20].decode())
         cur_pos = int(inp[20:29].decode())
 
-        with io.open("/tmp/cur-%d.bin" % cur_pos, mode="wb") as f:
-            f.write(inp)
+        #with io.open("/tmp/cur-%d.bin" % cur_pos, mode="wb") as f:
+        #    f.write(inp)
 
         start = 29
         end_of_meta = 128
@@ -82,7 +92,7 @@ def readWaveform(o):
             samples_total = total_smpls
             samples_data  = bytearray(samples_total)
             meta = inp[start:end_of_meta]
-            print("got %d total length" % samples_total)
+            debug("got %d total length" % samples_total)
         else:
             assert(samples_total == total_smpls)
 
@@ -104,7 +114,8 @@ def readWaveform(o):
                 #'offset': float(off),
                 }
         if res['enable']:
-            res['samples'] = channelSamples(chan, samples_data, int(points/2))
+            # TODO: blocksize?
+            res['samples'] = channelSamples(chan, samples_data, 2000)
             res['voltage'] = absoluteVoltages(res)
 
         return res
@@ -115,12 +126,14 @@ def readWaveform(o):
 
         # data is split up??
         #  |chan1a|chan2a|chan1b|chan2b|
-        pos1 = (chan-1)*block_len
-        pos2 = pos1 + channel_count*block_len
-        print("%s %s %s %s %s %s" % (chan, pos2, pos1, channel_count, points, block_len))
+        # For more than 4k Samples:
+        #  |chan1a|chan2a|chan1b|chan2b|chan1c|chan2c|...
 
-        samples = list(struct.unpack('%db' % block_len, data[pos1:pos1+block_len]))
-        samples.extend(struct.unpack('%db' % block_len, data[pos2:pos2+block_len]))
+        samples = list()
+        for i in range((chan-1)*block_len, len(data), block_len*channel_count):
+            debug("ch%s from %s to %s" % (chan, i, i+block_len))
+            samples.extend( struct.unpack('%db' % block_len, data[i:i+block_len]))
+
         return samples
             
     def absoluteVoltages(channel):
@@ -138,13 +151,13 @@ def readWaveform(o):
         return [ v/grid_y*scale-off for v in channel['samples']]
 
     while not readPacket():
-        #print("now %d bytes of %d\n" % (len(data), total))
+        #debug("now %d bytes of %d\n" % (len(data), total))
         pass
 
-    with io.open("/tmp/meta", mode="wb") as f:
-        f.write(meta)
-    with io.open("/tmp/samples", mode="wb") as f:
-        f.write(samples_data)
+    #with io.open("/tmp/meta", mode="wb") as f:
+    #    f.write(meta)
+    #with io.open("/tmp/samples", mode="wb") as f:
+    #    f.write(samples_data)
 
     # 00000000 -30 30-00 f2 05 2a 01 00  00 00 32 00 b5 ff 00 00  |00...*....2.....|
     # 00000010  00 00-32 2e 30 65 2b 30  30-32 2e 30 65 2b 30 30  |..2.0e+002.0e+00|
@@ -163,7 +176,7 @@ def readWaveform(o):
             c1e, c2e, c3e, c4e,
             sampling_rate, sampling_multiple,
             trigger_time, acq_start ) = res
-    print(res)
+    debug(res)
 
     channel_count = sum([int(c1e), int(c2e), int(c3e), int(c4e)])
     channels = [ 

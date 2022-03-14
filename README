@@ -8,6 +8,7 @@ CH1 and/or CH2 data get fetched, and written in the JSON along with a bit of met
 
 See [JSON output](doc/json.md) and [CSV/TSV output](doc/csv.md).
 
+
 ## (Proposed) Syntax
 
 ```sh
@@ -40,3 +41,10 @@ dso-via-scpi display text                 # continuous display of waveform via t
 - `-T` set timeout for USB communication
 
 Would we want samples instead of voltage output??
+
+
+## TODO
+
+Speedups? Fetching 2 Channels with 4M points each takes ~5mins... and the data seems broken. (Some of the samples when taken with a depth of 400K as well, but most look okay)
+
+40K is ~5secs (okay), 400K about 30 secs (already a bit too long)... no idea whether that can be sped up.
