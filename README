@@ -6,56 +6,33 @@ Here is an accumulation of scripts that allow to get data from a Hantek DSO 2D15
 
 CH1 and/or CH2 data get fetched, and written in the JSON along with a bit of metadata (like sampling rate).
 
-### JSON example
+See [JSON output](doc/json.md) and [CSV/TSV output](doc/csv.md).
 
-```json
-{                                                                                                                                                                                             
-  "trigger": false,                                                                                                                                                                           
-  "running": false,                                                                                                                                                                           
-  "channels": [                                                                                                                                                                               
-    {
-      "channel": 1,                                                                                             
-      "enable": true,
-+---4002 lines: "voltage":·····································································································································································
-+---4002 lines: "samples":·····································································································································································
-      "offset": 4,                                                                                                   
-      "probe": 10,                                                                                                   
-      "scale": 2                                                                                                     
-    },                                                                                                               
-    {                                                                                                                  
-      "channel": 2,
-      "enable": true,
-+---4002 lines: "voltage":·····································································································································································
-+---4002 lines: "samples":·····································································································································································
-      "offset": -3,                                                                                                 
-      "probe": 10,                                                                                                  
-      "scale": 1                                                                                                    
-    },                                                                                                               
-    {                                                                                                                  
-      "channel": 3,
-      "enable": false,
-      "voltage": 1                                                                                                   
-    },                                                                                                               
-    {                                                                                                                
-      "channel": 4,                                                                                                  
-      "enable": false,                                                                                               
-      "voltage": 1                                                                                                   
-    }                                                                                                                   
-  ],                                                                                                                    
-  "sampling_rate": 25000,                                                                                               
-  "sampling_multiple": 1,                                                                                               
-  "trigger_time": 0,                                                                                                    
-  "acq_start?": 10                                                                                                      
-}
+## (Proposed) Syntax
+
+```sh
+dso-via-scpi [save [waveform]] [-]        # writes TSV to STDOUT
+dso-via-scpi [save [waveform]] {filename} # writes TSV, CSV, JSON to file
+
+dso-via-scpi [save] config [-]            # writes text configuration to STDOUT
+dso-via-scpi [save] config {filename}     # writes text configuration to file
+
+dso-via-scpi load config [-]              # load text configuration from STDIN
+dso-via-scpi load config {filename}       # load text configuration from file
+
+dso-via-scpi load wavegen arb[1-4]        # load waveform for generator 1-4 from STDIN or file
+dso-via-scpi save wavegen arb[1-4]        # save waveform generator 1-4 to STDOUT or file
+
+dso-via-scpi example wavegen              # example generator waveform output to STDOUT or file
+dso-via-scpi example R                    # example R file to nicely format TSV data 
+
+dso-via-scpi display gnuplot              # continuous display of waveform via X11 gnuplot
+dso-via-scpi display R                    # continuous display of waveform via X11 R
+dso-via-scpi display text                 # continuous display of waveform via terminal
 ```
 
-### Pure sample bytes
+## Flags
 
-![Figure 1](doc/input-bytes.png)
-
-### Actual voltages
-
-![Figure 2](doc/voltages.png)
-
-
-vim: set ft=markdown :
+- `-v` Verbose Mode
+- `-d` Debugging
+- `-s` Sample output (instead of actual voltage) -- ??? Or both???

@@ -8,6 +8,8 @@ import pyvisa;
 import struct;
 import json;
 
+debug_flag = 0
+
 def channelMetaData(o, chan):
     coup = False
     try:
@@ -175,19 +177,58 @@ def readWaveform(o):
             'trigger': True if trigger == b'1' else False,
             'running': True if running == b'1' else False,
             'channels': channels,
+            'samples': points,
             'sampling_rate': float(sampling_rate),
             'sampling_multiple': float(sampling_multiple),
             'trigger_time': float(trigger_time),
             'acq_start?': float(acq_start)
             }
 
+def getDSO():
+    #nonlocal debug_flag
 
-resources = pyvisa.ResourceManager('@py')
-#print(resources.list_resources())
+    resources = pyvisa.ResourceManager('@py')
+    #print(resources.list_resources())
 
-oscilloscope = resources.open_resource( 'USB0::1183::20574::111::0::INSTR' )
+    oscilloscope = resources.open_resource( 'USB0::1183::20574::111::0::INSTR' )
 
-print("found a (%s)\n" % oscilloscope.query('*IDN?'))
+    #if debug_flag:
+    #    print("found a (%s)\n" % oscilloscope.query('*IDN?'))
+
+    return oscilloscope
+
+
+def saveWave(filename):
+    output = io.open(filename, 'wt') if filename else sys.stdout
+    o = getDSO()
+    wave = readWaveform(o)
+
+    enabled = list(filter(lambda ch: ch['enable'], wave['channels']))
+    header = ['sample', 'time'] + ["ch%d" % ch['channel'] for ch in enabled]
+
+    def put(sep):
+        nonlocal output, wave, enabled
+
+        def line(x):
+            nonlocal sep
+            return sep.join(x) + "\n"
+
+        def row(i):
+            nonlocal enabled, wave
+            return [str(i), str(i/wave['sampling_rate'] - wave['trigger_time'])] + [str(ch['voltage'][i]) for ch in enabled]
+
+        output.write(line(header))
+        output.writelines([line(row(i)) for i in range(0, wave['samples'])])
+
+    if filename.endswith(".csv"):
+        put(",")
+    elif filename.endswith(".json"):
+        output.write(json.dumps(wave))
+    else: # TSV
+        put("\t")
+
+    output.close()
+
 
 #sampling_rate = oscilloscope.query(':ACQ:SRAT?')
 
@@ -206,7 +247,52 @@ print("found a (%s)\n" % oscilloscope.query('*IDN?'))
 # sys.exit(0)
 
 
-name = sys.argv[1]
+args = list(sys.argv[1:])
+direction = 's'
+if args[0] == 'save':
+    args.pop(0)
+elif args[0] == 'load':
+    args.pop(0)
+    direction = 'l'
+elif args[0] == 'example':
+    args.pop(0)
+    if args[0] == 'wavegen':
+        args.pop(0)
+    output = io.open(args[0], 'wt') if args[0] else sys.stdout
+    output.write("... NIY")
+    output.flush()
+    output.close()
+    sys.exit(0)
+
+what='w'
+if args[0] == 'config':
+    what = 'c'
+    args.pop(0)
+elif args[0] == 'waveform':
+    args.pop(0)
+elif args[0] == 'wavegen':
+    what = 'g'
+    args.pop(0)
+
+if len(args) > 1:
+    sys.stderr.write("Too many or wrong arguments (%s).\n" % json.dumps(args))
+    sys.exit(1)
+
+filename = args.pop(0)
+
+todo = direction + what
+if todo == 'sw':
+    saveWave(filename)
+elif todo == 'sc':
+    saveConfig(filename)
+elif todo == 'lc':
+    loadConfig(filename)
+else:
+    sys.stderr.write("Unsupported/Not yet implemented operation %s.\n" % todo)
+    sys.exit(1)
+    
+
+sys.exit(0)
 
 while True:
     wave = readWaveform(oscilloscope)
@@ -214,10 +300,17 @@ while True:
         f.write(json.dumps(wave))
 
     gp = os.popen("gnuplot", "w")
-    gp.writelines(["plot '-', '-'\n"])
+    #gp = io.open("/tmp/gnuplot", "wt")
+
+    src = ["'-' with lines title 'CH%d'" % (ch["channel"]) 
+            for ch in wave["channels"] if ch['enable']]
+
+    gp.writelines([
+                "plot " + ", ".join(src) + "\n",
+        ])
     for ch in wave["channels"]:
         if ch['enable']:
-            gp.writelines([str(sample)+"\n" for sample in ch["voltage"]])
+            gp.writelines([str(sample)+"\n" for sample in ch['samples']]) # ch["voltage"]])
             gp.writelines(["e\n"])
 
     gp.flush()
