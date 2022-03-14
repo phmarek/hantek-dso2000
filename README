@@ -16,6 +16,7 @@ dso-via-scpi [save [waveform]] {filename} # writes TSV, CSV, JSON to file
 
 dso-via-scpi [save] config [-]            # writes text configuration to STDOUT
 dso-via-scpi [save] config {filename}     # writes text configuration to file
+dso-via-scpi get config {item}            # dump configuration 'item' to STDOUT
 
 dso-via-scpi load config [-]              # load text configuration from STDIN
 dso-via-scpi load config {filename}       # load text configuration from file
@@ -24,15 +25,18 @@ dso-via-scpi load wavegen arb[1-4]        # load waveform for generator 1-4 from
 dso-via-scpi save wavegen arb[1-4]        # save waveform generator 1-4 to STDOUT or file
 
 dso-via-scpi example wavegen              # example generator waveform output to STDOUT or file
-dso-via-scpi example R                    # example R file to nicely format TSV data 
+dso-via-scpi example ggplot2              # example R file using ggplot2 to nicely format TSV data 
 
 dso-via-scpi display gnuplot              # continuous display of waveform via X11 gnuplot
-dso-via-scpi display R                    # continuous display of waveform via X11 R
+dso-via-scpi display ggplot2              # continuous display of waveform via X11 R and ggplot2
 dso-via-scpi display text                 # continuous display of waveform via terminal
 ```
 
-## Flags
+## Flags (NIY)
 
 - `-v` Verbose Mode
 - `-d` Debugging
-- `-s` Sample output (instead of actual voltage) -- ??? Or both???
+- `-l` Keep the keyboard locked during continuous display
+- `-T` set timeout for USB communication
+
+Would we want samples instead of voltage output??

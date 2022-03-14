@@ -198,13 +198,31 @@ def getDSO():
     return oscilloscope
 
 
+def getConfig(items):
+    o = getDSO()
+    if len(items) == 0:
+        sys.stderr.write("No items specified.\n")
+    for item in items:
+        try:
+            res = o.query(item)
+            # only print key in verbose mode?
+            print("%s = %s" % (item, json.dumps(res)))
+        except pyvisa.errors.VisaIOError as c:
+            print("%s ERRORed: %s" % (item, c))
+
+def saveConfig(filename):
+    output = io.open(filename, 'wt') if filename else sys.stdout
+    o = getDSO()
+    output.write(o.query(":SETUp:NORMal?"))
+    output.close
+
 def saveWave(filename):
     output = io.open(filename, 'wt') if filename else sys.stdout
     o = getDSO()
     wave = readWaveform(o)
 
     enabled = list(filter(lambda ch: ch['enable'], wave['channels']))
-    header = ['sample', 'time'] + ["ch%d" % ch['channel'] for ch in enabled]
+    header = ['nr', 'time'] + ["ch%d" % ch['channel'] for ch in enabled] + ["ch%ds" % ch['channel'] for ch in enabled]
 
     def put(sep):
         nonlocal output, wave, enabled
@@ -215,7 +233,9 @@ def saveWave(filename):
 
         def row(i):
             nonlocal enabled, wave
-            return [str(i), str(i/wave['sampling_rate'] - wave['trigger_time'])] + [str(ch['voltage'][i]) for ch in enabled]
+            # With 4M points we need quite a few digits for the time;
+            # the channels only have 8 to 10bit, they can be shorter
+            return [str(i), "%8g" % (i/wave['sampling_rate'] - wave['trigger_time'])] + ["%4g" % ch['voltage'][i] for ch in enabled] + [str(ch['samples'][i]) for ch in enabled]
 
         output.write(line(header))
         output.writelines([line(row(i)) for i in range(0, wave['samples'])])
@@ -249,14 +269,17 @@ def saveWave(filename):
 
 args = list(sys.argv[1:])
 direction = 's'
-if args[0] == 'save':
+if len(args) > 0 and args[0] == 'save':
     args.pop(0)
-elif args[0] == 'load':
+elif len(args) > 0 and args[0] == 'get':
+    args.pop(0)
+    direction = 'g'
+elif len(args) > 0 and args[0] == 'load':
     args.pop(0)
     direction = 'l'
-elif args[0] == 'example':
+elif len(args) > 0 and args[0] == 'example':
     args.pop(0)
-    if args[0] == 'wavegen':
+    if len(args) > 0 and args[0] == 'wavegen':
         args.pop(0)
     output = io.open(args[0], 'wt') if args[0] else sys.stdout
     output.write("... NIY")
@@ -265,22 +288,27 @@ elif args[0] == 'example':
     sys.exit(0)
 
 what='w'
-if args[0] == 'config':
+if len(args) > 0 and args[0] == 'config':
     what = 'c'
     args.pop(0)
-elif args[0] == 'waveform':
+elif len(args) > 0 and args[0] == 'waveform':
     args.pop(0)
-elif args[0] == 'wavegen':
+elif len(args) > 0 and args[0] == 'wavegen':
     what = 'g'
     args.pop(0)
+
+todo = direction + what
+if todo == 'gc':
+    getConfig(args)
+    sys.exit(0)
+
 
 if len(args) > 1:
     sys.stderr.write("Too many or wrong arguments (%s).\n" % json.dumps(args))
     sys.exit(1)
 
-filename = args.pop(0)
+filename = args.pop(0) if len(args) else ''
 
-todo = direction + what
 if todo == 'sw':
     saveWave(filename)
 elif todo == 'sc':
