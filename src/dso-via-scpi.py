@@ -9,6 +9,32 @@ import struct;
 import json;
 
 debug_flag = 0
+progress_flag = sys.stderr.isatty()
+next_progress = time.time() + 1;
+max_progress_len = 0
+
+
+def progress(what, done):
+    global next_progress, max_progress_len, progress_flag
+    if not progress_flag:
+        return 0
+
+    if done < 0:
+        sys.stderr.write("\r%*s\r" % (max_progress_len, ""))
+    else:
+        now = time.time()
+        if now >= next_progress:
+            progress = "%5.1f%% %s" % (done * 100.0, what)
+
+            pl = len(progress);
+            if pl > max_progress_len:
+                max_progress_len = pl
+
+            next_progress = now + 1
+            sys.stderr.write("\r" + progress + ("%*s" % (max(0, max_progress_len-pl), "")) + "\r")
+
+    sys.stderr.flush()
+
 
 def debug(*args):
     global debug_flag
@@ -75,8 +101,8 @@ def readWaveform(o):
         assert(chr(inp[0]) == '#')
         assert(chr(inp[1]) == '9')
 
-        cur_len = int(inp[2:11].decode())
-        if cur_len == 0:
+        this_len = int(inp[2:11].decode())
+        if this_len == 0:
             return False
 
         total_smpls = int(inp[11:20].decode())
@@ -101,6 +127,8 @@ def readWaveform(o):
             samples_data[cur_pos+i] = inp[end_of_meta+i]
         samples_got += cur_len
 
+        progress("Fetching samples: %dK of %dK done" % (samples_got/1000, samples_total/1000),
+                samples_got/samples_total);
         return samples_got == samples_total
 
     def channelMeta(chan, volt, en):
@@ -153,6 +181,8 @@ def readWaveform(o):
     while not readPacket():
         #debug("now %d bytes of %d\n" % (len(data), total))
         pass
+
+    progress("", -1)
 
     #with io.open("/tmp/meta", mode="wb") as f:
     #    f.write(meta)
