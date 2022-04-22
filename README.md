@@ -8,8 +8,14 @@ CH1 and/or CH2 data get fetched, and written in the JSON along with a bit of met
 
 See [JSON output](doc/json.md) and [CSV/TSV output](doc/csv.md).
 
+```sh
+dso-via-scpi my-waveform.csv
+dso-via-scpi my-waveform.json
+```
 
-## (Proposed) Syntax
+
+
+## Syntax
 
 ```sh
 dso-via-scpi [save [waveform]] [-]        # writes TSV to STDOUT
