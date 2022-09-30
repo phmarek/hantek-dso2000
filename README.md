@@ -55,4 +55,4 @@ Would we want samples instead of voltage output??
 
 Speedups? Fetching 2 Channels with 4M points each takes ~5mins... and the data seems broken. (Some of the samples when taken with a depth of 400K as well, but most look okay)
 
-40K is ~5secs (okay), 400K about 30 secs (already a bit too long)... no idea whether that can be sped up.
+Two channels with 40K samples each is ~5secs (okay-ish), 400K about 30 secs (already a bit too long) -- and the twice 4M transfer takes 300 seconds, unusable. Please take a look at the [Hantek Quick Fetch](https://github.com/phmarek/hantek-dso2000-quick-fetch) repository.
