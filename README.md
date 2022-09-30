@@ -25,6 +25,8 @@ dso-via-scpi [save] config [-]            # writes text configuration to STDOUT
 dso-via-scpi [save] config {filename}     # writes text configuration to file
 dso-via-scpi get config {item}            # dump configuration 'item' to STDOUT
 
+dso-via-scpi list                         # lists devices
+
 dso-via-scpi load config [-]              # load text configuration from STDIN
 dso-via-scpi load config {filename}       # load text configuration from file
 

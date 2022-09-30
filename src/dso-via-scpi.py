@@ -227,13 +227,20 @@ def readWaveform(o):
             'acq_start?': float(acq_start)
             }
 
+def getDSOs(resources):
+    return resources.list_resources("USB0::1183::20574:?*")
+
 def getDSO():
     #nonlocal debug_flag
 
     resources = pyvisa.ResourceManager('@py')
-    #print(resources.list_resources())
+    probable = getDSOs(resources)
 
-    oscilloscope = resources.open_resource( 'USB0::1183::20574::111::0::INSTR' )
+    if len(probable) != 1:
+        sys.stderr.write("Not exactly one device with USB ID found.\n")
+        sys.exit(1)
+
+    oscilloscope = resources.open_resource( probable[0] )
 
     #if debug_flag:
     #    print("found a (%s)\n" % oscilloscope.query('*IDN?'))
@@ -320,6 +327,10 @@ elif len(args) > 0 and args[0] == 'get':
 elif len(args) > 0 and args[0] == 'load':
     args.pop(0)
     direction = 'l'
+elif len(args) > 0 and args[0] == 'list':
+    resources = pyvisa.ResourceManager('@py')
+    print(getDSOs(resources))
+    sys.exit(0)
 elif len(args) > 0 and args[0] == 'example':
     args.pop(0)
     if len(args) > 0 and args[0] == 'wavegen':
